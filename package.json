@@ -1,0 +1,28 @@
+{
+  "name": "dpdd",
+  "version": "1.0.0",
+  "description": "Dynamic Domain for DNSPod.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/XadillaX/dpdd.git"
+  },
+  "keywords": [
+    "DNSPod"
+  ],
+  "author": "XadillaX <i@2333.moe>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/XadillaX/dpdd/issues"
+  },
+  "homepage": "https://github.com/XadillaX/dpdd#readme",
+  "dependencies": {
+    "fbbk-json": "^1.0.0",
+    "nomnom": "^1.8.1",
+    "scarlet-task": "^0.1.0",
+    "spidex": "^2.1.1"
+  }
+}
