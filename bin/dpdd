@@ -1,0 +1,143 @@
+#!/usr/bin/env node
+"use strict";
+
+const fs = require("fs");
+const path = require("path");
+
+const fJSON = require("fbbk-json");
+const Scarlet = require("scarlet-task");
+
+const scarlet = new Scarlet(10);
+
+const opts = require("nomnom")
+    .script("ddpd")
+    .option("config", {
+        abbr: "c",
+        default: path.join(process.env.HOME, ".ddpdrc"),
+        help: "the config file path",
+        metavar: "FILE"
+    })
+    .option("token", {
+        abbr: "t",
+        help: "the API token",
+        metavar: "TOKEN"
+    })
+    .option("remote-lang", {
+        abbr: "l",
+        help: "remote server language",
+        metavar: "LANG",
+        choices: [ "cn", "en" ],
+        default: "cn"
+    })
+    .option("domain", {
+        abbr: "d",
+        help: "the domain to be loaded",
+        metavar: "DOMAIN"
+    })
+    .option("subdomain", {
+        abbr: "s",
+        help: "the subdomain to be run",
+        metavar: "SUB",
+        list: true
+    })
+    .option("interval", {
+        abbr: "i",
+        help: "the dynamic domain interval (ms)",
+        metavar: "MILLISECOND",
+        default: 30000
+    })
+    .parse();
+
+const ConfigSchema = require("../lib/config_schema");
+const DDNS = require("../lib/ddns");
+
+const config = [];
+
+let defaultInterval = parseFloat(opts.interval) || 30000;
+let defaultRemoteLang = opts.remoteLang === "en" ? "en" : "cn";
+
+// config from arguments
+if(opts.token && opts.domain && opts.subdomain && opts.subdomain.length) {
+    let cfg = new ConfigSchema(
+            opts.token,
+            opts.domain,
+            defaultRemoteLang,
+            opts.subdomain,
+            defaultInterval);
+    if(cfg.check()) {
+        config.push(cfg);
+    } else {
+        console.error("WARN: Broken config arguments.");
+    }
+}
+
+// config from file
+if(opts.config) {
+    let json;
+    try {
+        json = fs.readFileSync(opts.config, { encoding: "utf8" });
+        json = fJSON.parse(json);
+    } catch(e) {
+        if(opts.config !== path.join(process.env.HOME, ".ddpdrc")) {
+            console.error("WARN: Broken config file:", e.message);
+        }
+        json = [];
+    }
+
+    if(!json || typeof json !== "object") {
+        console.error("WARN: Broken config file.");
+    } else {
+        if(!Array.isArray(json)) {
+            json = [ json ];
+        }
+
+        for(let i = 0; i < json.length; i++) {
+            let obj = json[i];
+            if(!obj || typeof obj !== "object") {
+                console.error(`WARN: Broken config ${i} in config file.`);
+                continue;
+            }
+
+            let cfg = new ConfigSchema(
+                    obj.token,
+                    obj.domain,
+                    defaultRemoteLang === "en" ? "en" : defaultRemoteLang,
+                    obj.subdomains,
+                    parseFloat(opts.interval) || defaultInterval);
+
+            if(cfg.check()) {
+                config.push(cfg);
+            } else {
+                console.error(`WARN: Broken config ${i} in config file.`);
+            }
+        }
+    }
+}
+
+if(!config.length) {
+    console.error("WARN: No available config.");
+    process.exit(0);
+}
+
+function startDDNS(TO) {
+    scarlet.taskDone(TO);
+}
+
+function initDDNS(TO) {
+    const ddns = TO.task;
+    ddns.initialize(function(err) {
+        if(err) {
+            console.error(`WARN: Failed to initialize ${ddns.domain}: ${err.message}`);
+        } else {
+            console.log(`INFO: ${ddns.domain} - ${ddns.domainId} initialized.`);
+            scarlet.push(ddns, startDDNS);
+        }
+
+        scarlet.taskDone(TO);
+    });
+}
+
+for(let i = 0; i < config.length; i++) {
+    let ddns = new DDNS(config[i]);
+    scarlet.push(ddns, initDDNS);
+}
