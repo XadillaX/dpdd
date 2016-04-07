@@ -1,12 +1,12 @@
-# Dynamic Domain for DNSPod
+## Dynamic Domain for DNSPod
 
-## Installation
+### Installation
 
 ```sh
 $ [sudo] npm install -g dpdd
 ```
 
-## Usage
+### Usage
 
 ```
 Usage: ddpd [options]
@@ -59,7 +59,7 @@ or
 }]
 ```
 
-## API
+### API
 
 If you want to use `ddpd` as a package in your own project, you should require it at first.
 
@@ -69,7 +69,7 @@ const ddpd = require("ddpd");
 
 The specifications of API, and details not mentioned in README, would be referenced at [API document](http://blog.xcoder.in/ddpd/doc).
 
-## Contribute
+### Contribute
 
 You're welcome to make pull requests!
 
