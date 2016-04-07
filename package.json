@@ -6,6 +6,9 @@
   "scripts": {
       "doc": "./node_modules/.bin/jsdoc -c ./jsdoc.json"
   },
+  "bin": {
+      "dpdd": "bin/dpdd"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/XadillaX/dpdd.git"
