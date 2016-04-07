@@ -67,7 +67,7 @@ If you want to use `ddpd` as a package in your own project, you should require i
 const ddpd = require("ddpd");
 ```
 
-The specifications of API, and details not mentioned in README, would be referenced at [API document](http://blog.xcoder.in/ddpd/doc).
+The specifications of API, and details not mentioned in README, would be referenced at [API document](http://blog.xcoder.in/dpdd/doc).
 
 ### Contribute
 
