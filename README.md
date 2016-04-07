@@ -9,10 +9,10 @@ $ [sudo] npm install -g dpdd
 ### Usage
 
 ```
-Usage: ddpd [options]
+Usage: dpdd [options]
 
 Options:
-   -c FILE, --config FILE                   the config file path  [/Users/xadillax/.ddpdrc]
+   -c FILE, --config FILE                   the config file path  [/Users/xadillax/.dpddrc]
    -t TOKEN, --token TOKEN                  the API token
    -l LANG, --remote-lang LANG              remote server language  [cn]
    -d DOMAIN, --domain DOMAIN               the domain to be loaded
@@ -61,10 +61,10 @@ or
 
 ### API
 
-If you want to use `ddpd` as a package in your own project, you should require it at first.
+If you want to use `dpdd` as a package in your own project, you should require it at first.
 
 ```javascript
-const ddpd = require("ddpd");
+const dpdd = require("dpdd");
 ```
 
 The specifications of API, and details not mentioned in README, would be referenced at [API document](http://blog.xcoder.in/dpdd/doc).
