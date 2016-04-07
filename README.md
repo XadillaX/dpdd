@@ -29,9 +29,9 @@ If you have specified a configuration file, it's format should be a JSON object 
 
 ```json
 {
-    token: "token_id,token",
-    domain: "your.domain.com",
-    subdomains: [
+    "token": "token_id,token",
+    "domain": "your.domain.com",
+    "subdomains": [
         "@",
         "www",
         "and.so.on"
@@ -43,17 +43,17 @@ or
 
 ```json
 [{
-    token: "token_id,token",
-    domain: "your.domain.com",
-    subdomains: [
+    "token": "token_id,token",
+    "domain": "your.domain.com",
+    "subdomains": [
         "@",
         "www",
         "and.so.on"
     ]
 }, {
-    token: "token_id,token",
-    domain: "your.domain.com",
-    subdomains: [
+    "token": "token_id,token",
+    "domain": "your.domain.com",
+    "subdomains": [
         "@",
         "www",
         "and.so.on"
