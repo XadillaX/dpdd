@@ -1,6 +1,4 @@
-# dpdd
-
-Dynamic Domain for DNSPod.
+# Dynamic Domain for DNSPod
 
 ## Installation
 
