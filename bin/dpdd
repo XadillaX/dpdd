@@ -9,6 +9,8 @@ const Scarlet = require("scarlet-task");
 
 const scarlet = new Scarlet(10);
 
+const IpGetter = require("../lib/ip_getters");
+
 const opts = require("nomnom")
     .script("ddpd")
     .option("config", {
@@ -46,6 +48,13 @@ const opts = require("nomnom")
         metavar: "MILLISECOND",
         default: 30000
     })
+    .option("ip-getter", {
+        abbr: "g",
+        help: "specify an IP getter",
+        metavar: "GETTER",
+        default: "CHINAZ",
+        choices: Object.keys(IpGetter)
+    })
     .parse();
 
 const ConfigSchema = require("../lib/config_schema");
@@ -54,7 +63,16 @@ const DDNS = require("../lib/ddns");
 const config = [];
 
 let defaultInterval = parseFloat(opts.interval) || 30000;
-let defaultRemoteLang = opts.remoteLang === "en" ? "en" : "cn";
+let defaultRemoteLang = opts["remote-lang"] === "en" ? "en" : "cn";
+let defaultIPGetter = IpGetter[opts["ip-getter"].toUpperCase()];
+if(typeof defaultIPGetter !== "function") defaultIPGetter = IpGetter.IP5;
+
+function getIpGetter(name) {
+    name = (name || "").toUpperCase();
+    let func = IpGetter[name];
+    if(typeof func !== "function") func = defaultIPGetter;
+    return func;
+}
 
 // config from arguments
 if(opts.token && opts.domain && opts.subdomain && opts.subdomain.length) {
@@ -63,6 +81,7 @@ if(opts.token && opts.domain && opts.subdomain && opts.subdomain.length) {
             opts.domain,
             defaultRemoteLang,
             opts.subdomain,
+            defaultIPGetter,
             defaultInterval);
     if(cfg.check()) {
         config.push(cfg);
@@ -103,6 +122,7 @@ if(opts.config) {
                     obj.domain,
                     defaultRemoteLang === "en" ? "en" : defaultRemoteLang,
                     obj.subdomains,
+                    getIpGetter(obj.ipGetter),
                     parseFloat(opts.interval) || defaultInterval);
 
             if(cfg.check()) {
@@ -120,6 +140,7 @@ if(!config.length) {
 }
 
 function startDDNS(TO) {
+    TO.task.start();
     scarlet.taskDone(TO);
 }
 
@@ -127,13 +148,39 @@ function initDDNS(TO) {
     const ddns = TO.task;
     ddns.initialize(function(err) {
         if(err) {
-            console.error(`WARN: Failed to initialize ${ddns.domain}: ${err.message}`);
+            console.error(`WARN: Failed to initialize ${ddns.cfg.domain}: ${err.message}`);
         } else {
-            console.log(`INFO: ${ddns.domain} - ${ddns.domainId} initialized.`);
+            console.log(`INFO: ${ddns.cfg.domain} - ${ddns.domainId} initialized.`);
             scarlet.push(ddns, startDDNS);
         }
 
         scarlet.taskDone(TO);
+    });
+
+    ddns.on("round", () => console.log(`INFO: ${ddns.cfg.domain}'s new round started.`));
+    ddns.on("detecting", () => console.log(`INFO: ${ddns.cfg.domain}'s detecting current IP.`));
+    ddns.on("detected", ip => console.log(`INFO: Current IP ${ip} detected for ${ddns.cfg.domain}.`));
+    ddns.on("equal", (record, ip) => {
+        console.log(`INFO: ${record.name === "@" ? "" : (record.name + ".")}${ddns.cfg.domain}'s IP equals` +
+                ` to current IP - ${ip}.`);
+    });
+    ddns.on("changing", (record, ip) => {
+        console.log(`INFO: Changing ${record.name === "@" ? "" : (record.name + ".")}${ddns.cfg.domain}'s IP` +
+                ` to ${ip}.`);
+    });
+    ddns.on("changed", record => {
+        console.log(`INFO: ${record.name === "@" ? "" : (record.name + ".")}${ddns.cfg.domain}'s IP changed` +
+                ` to ${record.ip}.`);
+    });
+    ddns.on("saveError", (err, record) => {
+        console.error(`ERROR: Error occurred for [${record.name}] ${ddns.cfg.domain} - [${err.message}].`);
+    });
+    ddns.on("roundEnd", () => console.log(`INFO: Wait ${ddns.cfg.interval}ms for next round.`));
+
+    ddns.on("warn", err => console.error("WARN: " + err.message));
+    ddns.on("error", err => {
+        console.error(`ERROR: Error occurred for ${ddns.cfg.domain} - [${err.message}].`);
+        console.error(err.stack);
     });
 }
 
